@@ -12,7 +12,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private  String username;
-    private String rawPassword;
+    private String Password;
 
     //We are defining our Roles Entities so that Multiple Roles can be provided to the user based on defined permission from the Authentication.
     @ElementCollection(fetch = FetchType.EAGER)

@@ -13,12 +13,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
     private final CustomUserDetail customUserDetail;
-
 
     public SecurityConfig(CustomUserDetail customUserDetail) {
         this.customUserDetail = customUserDetail;
@@ -33,22 +31,32 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable) // Disable CSRF for this demo project
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register").permitAll() // Temporarily allow public access for registration
-                        .requestMatchers("/api/users/login").permitAll() // Public access for login
-                        .requestMatchers("/api/blogposts/**").hasAnyRole("USER", "ADMIN") // Restrict to USER or ADMIN
-                        .requestMatchers("/api/comments/**").authenticated() // Require authentication for comments
-                        .anyRequest().authenticated() // All other requests require authentication
+                        // No role required for user registration, so permit anyone to register.
+                        .requestMatchers("/api/users/register").permitAll() // Registration is open for everyone
+
+                        // Allow login without authentication
+                        .requestMatchers("/api/users/login").permitAll()
+
+                        // Restrict password reset to only ADMIN role
+                        .requestMatchers("/api/users/resetPassword").hasRole("ADMIN")
+
+                        // Allow blog posts and comments only for authenticated users
+                        .requestMatchers("/api/blogposts/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/comments/**").authenticated()
+
+                        // Require authentication for all other requests
+                        .anyRequest().authenticated()
                 )
                 .httpBasic(httpBasic -> httpBasic.realmName("Blog Management API")); // Enable HTTP Basic authentication
 
         return http.build();
     }
 
-
     @Bean
     public UserDetailsService userDetailsService() {
         return customUserDetail;
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
